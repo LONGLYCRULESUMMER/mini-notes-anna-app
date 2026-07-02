@@ -1,0 +1,23 @@
+{
+  "name": "mini-notes-anna-app",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Mini Notes with LLM Summary — Anna App (storage Host API + Executa sampling tool)",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "validate": "anna-app validate --strict",
+    "dev": "anna-app dev --no-llm",
+    "dev:harness": "npm run build && anna-app dev --no-llm",
+    "executa:mock": "anna-app executa dev --dir executas/notes-summarizer --mock-sampling fixtures/mock-sampling.jsonl --invoke summarize --args '{\"notes\":[\"明天跟客户 follow up\",\"修复登录 bug\",\"Workshop 内容想法\"]}'",
+    "executa:repl": "anna-app executa dev --dir executas/notes-summarizer --mock-sampling fixtures/mock-sampling.jsonl",
+    "executa:describe": "anna-app executa dev --dir executas/notes-summarizer --describe",
+    "test:rpc": "node scripts/rpc-smoke.mjs",
+    "package:binary": "bash scripts/build-binary.sh"
+  },
+  "devDependencies": {
+    "@anna-ai/cli": "^0.1.33",
+    "typescript": "^5.6.0",
+    "vite": "^6.0.0"
+  }
+}

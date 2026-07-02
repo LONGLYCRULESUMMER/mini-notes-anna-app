@@ -1,0 +1,96 @@
+# Build the notes-summarizer Executa for all three required platforms and
+# attach the archives to a GitHub Release.
+#
+# Triggers:
+#   - pushing a tag `v*` (e.g. v1.0.0)
+#   - manual `workflow_dispatch` (give it a tag name; the release is
+#     created if it does not exist yet)
+#
+# Release assets produced (Anna binary-distribution platform keys):
+#   mini-notes-summarizer-darwin-arm64.tar.gz
+#   mini-notes-summarizer-darwin-x86_64.tar.gz
+#   mini-notes-summarizer-windows-x86_64.zip
+name: Release Executa binaries
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to create/upload to (e.g. v1.0.0)"
+        required: true
+        default: "v1.0.0"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - platform: darwin-arm64
+            asset: mini-notes-summarizer-darwin-arm64.tar.gz
+          - platform: darwin-x86_64
+            asset: mini-notes-summarizer-darwin-x86_64.tar.gz
+          - platform: windows-x86_64
+            asset: mini-notes-summarizer-windows-x86_64.zip
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+          cache: false # plugin has zero deps — no go.sum to key a cache on
+
+      # Smoke test the exact source we are about to cross-compile: build a
+      # native linux binary and drive its JSON-RPC describe/initialize.
+      - name: Smoke test (JSON-RPC describe + initialize on native build)
+        working-directory: executas/notes-summarizer
+        run: |
+          CGO_ENABLED=0 go build -o /tmp/smoke-tool .
+          printf '%s\n%s\n' \
+            '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2.0","capabilities":{"sampling":{}}}}' \
+            '{"jsonrpc":"2.0","id":2,"method":"describe"}' \
+            | /tmp/smoke-tool 2>/dev/null > /tmp/smoke-out.jsonl
+          python3 - <<'EOF'
+          import json
+          frames = [json.loads(l) for l in open("/tmp/smoke-out.jsonl") if l.strip()]
+          by_id = {f["id"]: f for f in frames}
+          init = by_id[1]["result"]
+          assert init["protocolVersion"] == "2.0", init
+          assert "sampling" in init["capabilities"], init
+          mani = by_id[2]["result"]
+          assert mani["name"] == "tool-dev-mini-notes-summarizer", mani
+          assert "llm.sample" in mani["host_capabilities"], mani
+          assert any(t["name"] == "summarize" for t in mani["tools"]), mani
+          print("smoke test OK:", mani["name"], mani["version"])
+          EOF
+
+      - name: Build archive
+        run: bash scripts/build-binary.sh ${{ matrix.platform }}
+
+      - name: Verify archive structure (manifest.json + bin entrypoint at root)
+        run: |
+          cd dist
+          if [[ "${{ matrix.asset }}" == *.zip ]]; then
+            unzip -l "${{ matrix.asset }}" | tee /dev/stderr | grep -q "manifest.json"
+            unzip -l "${{ matrix.asset }}" | grep -q "bin/tool-dev-mini-notes-summarizer.exe"
+          else
+            tar -tzf "${{ matrix.asset }}" | tee /dev/stderr | grep -q "^manifest.json$"
+            tar -tzf "${{ matrix.asset }}" | grep -q "^bin/tool-dev-mini-notes-summarizer$"
+          fi
+
+      - name: Upload workflow artifact (auxiliary)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}
+          path: dist/${{ matrix.asset }}
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+          files: dist/${{ matrix.asset }}

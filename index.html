@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mini Notes</title>
+    <script type="module" src="/src/main.ts"></script>
+  </head>
+  <body>
+    <main class="app">
+      <header class="app__header">
+        <h1>Mini Notes</h1>
+        <span id="conn-status" class="badge badge--off" title="Anna 连接状态">offline</span>
+      </header>
+
+      <section class="composer">
+        <input
+          id="note-input"
+          type="text"
+          maxlength="500"
+          placeholder="写一条简短笔记，例如：明天跟客户 follow up"
+          autocomplete="off"
+        />
+        <button id="add-btn" type="button">添加</button>
+      </section>
+
+      <div id="error-banner" class="banner banner--error" hidden></div>
+
+      <section class="notes">
+        <div class="notes__toolbar">
+          <h2>笔记列表</h2>
+          <button id="summarize-btn" type="button" disabled>Summarize</button>
+        </div>
+        <ol id="notes-list" class="notes__list"></ol>
+        <p id="empty-state" class="notes__empty" hidden>还没有笔记 — 在上方输入第一条吧。</p>
+      </section>
+
+      <section id="summary-panel" class="summary" hidden>
+        <h2>LLM 总结</h2>
+        <p id="summary-text"></p>
+        <p id="summary-meta" class="summary__meta"></p>
+      </section>
+    </main>
+  </body>
+</html>

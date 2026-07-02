@@ -1,0 +1,8 @@
+# Mock fixture for `anna-app executa dev --mock-sampling fixtures/mock-sampling.jsonl`.
+# One JSON object per line; the runner serves the first entry whose ns+method
+# match the reverse RPC (optional `match.contentIncludes` narrows by prompt text).
+# The summary text below is deliberately prefixed with "(mock)" so a reviewer can
+# prove the returned summary came from THIS fixture through sampling/createMessage,
+# not from any hardcoded rule in the tool or the frontend.
+{"ns":"sampling","method":"createMessage","match":{"contentIncludes":"登录"},"result":{"role":"assistant","content":{"type":"text","text":"(mock via sampling/createMessage) 今日待办：跟进客户、修复登录 bug，并整理 Workshop 内容想法。"},"model":"mock-model","stopReason":"endTurn","usage":{"inputTokens":42,"outputTokens":28,"totalTokens":70}}}
+{"ns":"sampling","method":"createMessage","result":{"role":"assistant","content":{"type":"text","text":"(mock via sampling/createMessage) A one-paragraph summary of the supplied notes."},"model":"mock-model","stopReason":"endTurn","usage":{"inputTokens":30,"outputTokens":18,"totalTokens":48}}}

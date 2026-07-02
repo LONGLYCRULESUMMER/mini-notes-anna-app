@@ -1,0 +1,10 @@
+{
+  "slug": "mini-notes-summarizer",
+  "name": "Mini Notes Summarizer",
+  "version": "1.0.0",
+  "executa_type": "tool",
+  "description": "Summarizes Mini Notes via host LLM sampling (reverse sampling/createMessage).",
+  "tool_id": "tool-dev-mini-notes-summarizer",
+  "type": "go",
+  "_comment": "tool_id must match manifest.json required_executas / ui.host_api.tools and src/config.ts TOOL_ID. type=go → `anna-app dev` / `anna-app executa dev` launch it with `go run .` in this directory."
+}
